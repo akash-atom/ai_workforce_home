@@ -69,7 +69,7 @@
       return;
     }
 
-    var activeChannel = 'teams';
+    var activeChannel = 'browser';
     var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     var dur = reduceMotion ? 0 : 0.3;
     var slide = reduceMotion ? 0 : 8;
