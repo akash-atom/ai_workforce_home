@@ -506,6 +506,49 @@
     }
   }
 
+  function initStickyLinkState() {
+    var nav = document.querySelector('.nav_latest');
+    var els = [];
+    var s1 = document.getElementById('sticky-link-1');
+    var s2 = document.getElementById('sticky-link-2');
+    if (s1) els.push(s1);
+    if (s2) els.push(s2);
+    if (!nav || !els.length) return;
+
+    var style = document.createElement('style');
+    style.textContent = [
+      '#sticky-link-1, #sticky-link-2 {',
+      '  transition: opacity 300ms cubic-bezier(0.2, 0, 0, 1);',
+      '}',
+      '#sticky-link-1.is-stuck, #sticky-link-2.is-stuck {',
+      '  opacity: 1;',
+      '}'
+    ].join('\n');
+    document.head.appendChild(style);
+
+    function update() {
+      var navBottom = nav.getBoundingClientRect().bottom;
+      for (var i = 0; i < els.length; i++) {
+        var elTop = els[i].getBoundingClientRect().top;
+        els[i].classList.toggle('is-stuck', elTop <= navBottom + 1);
+      }
+    }
+
+    var ticking = false;
+    function onScroll() {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(function () {
+        update();
+        ticking = false;
+      });
+    }
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll, { passive: true });
+    update();
+  }
+
   function init() {
     eagerLoadAllImages();
     initHeroCrossfade();
@@ -513,6 +556,7 @@
     initVideoPlayers();
     initScrollSpy(['for_emp', 'for_it', 'for_biz_leaders']);
     initScrollSpy(['it_usecase', 'hr_usecase']);
+    initStickyLinkState();
     waitForAllImages(refreshHeroRunway);
   }
 
