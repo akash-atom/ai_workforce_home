@@ -580,6 +580,70 @@
     update();
   }
 
+  function initCustomerLogosMarquee() {
+    if (typeof window.gsap === 'undefined') return;
+
+    var wrapper = document.querySelector('.custo-logos-wrapper');
+    if (!wrapper || wrapper.children.length === 0) return;
+
+    var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduceMotion) return;
+
+    var cs = getComputedStyle(wrapper);
+    var gap = parseInt(cs.columnGap || cs.gap, 10) || 24;
+
+    var track = document.createElement('div');
+    track.style.display = 'flex';
+    track.style.alignItems = 'center';
+    track.style.gap = gap + 'px';
+    track.style.flexShrink = '0';
+
+    while (wrapper.firstChild) {
+      track.appendChild(wrapper.firstChild);
+    }
+
+    var trackClone = track.cloneNode(true);
+    trackClone.setAttribute('aria-hidden', 'true');
+
+    wrapper.style.overflow = 'hidden';
+    wrapper.style.display = 'flex';
+    wrapper.style.gap = gap + 'px';
+    wrapper.style.justifyContent = 'flex-start';
+    wrapper.appendChild(track);
+    wrapper.appendChild(trackClone);
+
+    var marqueeAnimation = null;
+
+    function play() {
+      var width = parseInt(getComputedStyle(track).getPropertyValue('width'), 10);
+      var distance = -1 * (width + gap);
+
+      if (marqueeAnimation) marqueeAnimation.kill();
+
+      marqueeAnimation = gsap.fromTo(
+        wrapper.children,
+        { x: 0 },
+        {
+          x: distance,
+          duration: 45,
+          repeat: -1,
+          ease: 'linear'
+        }
+      );
+    }
+
+    play();
+
+    wrapper.addEventListener('mouseenter', function () {
+      if (marqueeAnimation) marqueeAnimation.pause();
+    });
+    wrapper.addEventListener('mouseleave', function () {
+      if (marqueeAnimation) marqueeAnimation.resume();
+    });
+
+    window.addEventListener('resize', play);
+  }
+
   function init() {
     eagerLoadAllImages();
     initHeroCrossfade();
@@ -588,6 +652,7 @@
     initScrollSpy(['for_emp', 'for_it', 'for_biz_leaders']);
     initScrollSpy(['it_usecase', 'hr_usecase']);
     initStickyLinkState();
+    initCustomerLogosMarquee();
     waitForAllImages(refreshHeroRunway);
   }
 
