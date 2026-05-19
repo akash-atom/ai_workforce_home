@@ -530,13 +530,14 @@
   }
 
   function initStickyLinkState() {
-    var nav = document.querySelector('.nav_latest');
+    var navDesktop = document.querySelector('.nav_latest');
+    var navMobile = document.querySelector('.mob_nav_latest') || document.querySelector('.mob_nav_latest_v2');
     var els = [];
     var s1 = document.getElementById('sticky-link-1');
     var s2 = document.getElementById('sticky-link-2');
     if (s1) els.push(s1);
     if (s2) els.push(s2);
-    if (!nav || !els.length) return;
+    if (!els.length || (!navDesktop && !navMobile)) return;
 
     var style = document.createElement('style');
     style.textContent = [
@@ -549,7 +550,14 @@
     ].join('\n');
     document.head.appendChild(style);
 
+    function getActiveNav() {
+      var isMobile = window.matchMedia && window.matchMedia('(max-width: 991px)').matches;
+      return isMobile ? (navMobile || navDesktop) : (navDesktop || navMobile);
+    }
+
     function update() {
+      var nav = getActiveNav();
+      if (!nav) return;
       var navBottom = nav.getBoundingClientRect().bottom;
       for (var i = 0; i < els.length; i++) {
         var elTop = els[i].getBoundingClientRect().top;
