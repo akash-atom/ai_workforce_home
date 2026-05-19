@@ -18,6 +18,9 @@
     if (typeof window.gsap === 'undefined' || typeof window.ScrollTrigger === 'undefined') {
       return;
     }
+    if (window.matchMedia && window.matchMedia('(max-width: 991px)').matches) {
+      return;
+    }
     gsap.registerPlugin(ScrollTrigger);
 
     var sticky = document.querySelector('.page_wrapper');
@@ -515,6 +518,9 @@
   }
 
   function refreshHeroRunway() {
+    if (window.matchMedia && window.matchMedia('(max-width: 991px)').matches) {
+      return;
+    }
     var pw = document.querySelector('.page_wrapper');
     if (!pw) return;
     document.body.style.minHeight = (pw.offsetHeight + window.innerHeight) + 'px';
