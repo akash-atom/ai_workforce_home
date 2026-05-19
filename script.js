@@ -49,16 +49,16 @@
     gsap.set(dayImg, { opacity: 1 });
     gsap.set(nightImg, { opacity: 0 });
 
-    gsap.timeline({
-      scrollTrigger: {
-        trigger: sticky,
-        start: 'top top',
-        end: '+=' + scrollDistance,
-        scrub: 1
-      }
-    })
-      .to(dayImg, { opacity: 0, ease: 'power2.inOut' }, 0)
-      .to(nightImg, { opacity: 1, ease: 'power2.inOut' }, 0);
+    var tl = gsap.timeline({ paused: true });
+    tl.to(dayImg, { opacity: 0, duration: 0.6, ease: 'power2.inOut' }, 0)
+      .to(nightImg, { opacity: 1, duration: 0.6, ease: 'power2.inOut' }, 0);
+
+    ScrollTrigger.create({
+      start: 1,
+      end: scrollDistance,
+      onEnter: function () { tl.play(); },
+      onLeaveBack: function () { tl.reverse(); }
+    });
   }
 
   function initChannelSwitcher() {
