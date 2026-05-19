@@ -69,6 +69,23 @@
       return;
     }
 
+    var channelStyle = document.createElement('style');
+    channelStyle.textContent = [
+      '.logo-name-wrapper {',
+      '  transition: border-color 300ms cubic-bezier(0.2, 0, 0, 1);',
+      '}',
+      '.logo-name-wrapper.is-active {',
+      '  border-color: #953BFF;',
+      '}',
+      '#channel-logo {',
+      '  transition: filter 300ms cubic-bezier(0.2, 0, 0, 1);',
+      '}',
+      '.logo-name-wrapper.is-active #channel-logo {',
+      '  filter: none;',
+      '}'
+    ].join('\n');
+    document.head.appendChild(channelStyle);
+
     var activeChannel = 'browser';
     var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     var dur = reduceMotion ? 0 : 0.3;
