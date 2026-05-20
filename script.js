@@ -47,8 +47,6 @@
 
     dayImg.style.willChange = 'opacity';
     nightImg.style.willChange = 'opacity';
-    gsap.set(dayImg, { opacity: 1 });
-    gsap.set(nightImg, { opacity: 0 });
 
     var tl = gsap.timeline({ paused: true });
     tl.to(dayImg, { opacity: 0, duration: 0.6, ease: 'power2.inOut' }, 0)
