@@ -23,10 +23,10 @@
     }
     gsap.registerPlugin(ScrollTrigger);
 
-    var sticky = document.querySelector('.page_wrapper');
+    var pageWrapper = document.querySelector('.page_wrapper');
     var dayImg = document.querySelector('.ai-workforce-hero-img');
     var nightImg = document.querySelector('.ai-workforce-hero-img-night');
-    if (!sticky || !dayImg || !nightImg) {
+    if (!pageWrapper || !dayImg || !nightImg) {
       return;
     }
 
@@ -37,12 +37,13 @@
       return;
     }
 
-    var runway = sticky.parentElement;
-    var scrollDistance = window.innerHeight;
+    if (window.pageYOffset > window.innerHeight * 0.5) {
+      gsap.set(dayImg, { opacity: 0 });
+      gsap.set(nightImg, { opacity: 1 });
+      return;
+    }
 
-    sticky.style.setProperty('position', 'sticky', 'important');
-    sticky.style.setProperty('top', '0', 'important');
-    runway.style.setProperty('min-height', (sticky.offsetHeight + scrollDistance) + 'px');
+    var scrollDistance = window.innerHeight;
 
     dayImg.style.willChange = 'opacity';
     nightImg.style.willChange = 'opacity';
@@ -518,15 +519,9 @@
   }
 
   function refreshHeroRunway() {
-    if (window.matchMedia && window.matchMedia('(max-width: 991px)').matches) {
-      return;
-    }
-    var pw = document.querySelector('.page_wrapper');
-    if (!pw) return;
-    document.body.style.minHeight = (pw.offsetHeight + window.innerHeight) + 'px';
-    if (window.ScrollTrigger && typeof ScrollTrigger.refresh === 'function') {
-      ScrollTrigger.refresh();
-    }
+    // No-op: hero pin/runway logic has been removed; the hero now scrolls
+    // naturally with the rest of the page, so there is no body min-height
+    // to manage here. Kept as a stub to preserve the existing call site.
   }
 
   function initStickyLinkState() {
@@ -641,7 +636,12 @@
       if (marqueeAnimation) marqueeAnimation.resume();
     });
 
-    window.addEventListener('resize', play);
+    var lastWidth = window.innerWidth;
+    window.addEventListener('resize', function () {
+      if (window.innerWidth === lastWidth) return;
+      lastWidth = window.innerWidth;
+      play();
+    });
   }
 
   function init() {
