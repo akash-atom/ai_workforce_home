@@ -37,9 +37,9 @@
       return;
     }
 
-    if (window.pageYOffset > window.innerHeight * 0.5) {
-      gsap.set(dayImg, { opacity: 0 });
-      gsap.set(nightImg, { opacity: 1 });
+    if (dayImg.getBoundingClientRect().bottom <= 0) {
+      gsap.to(dayImg, { opacity: 0, duration: 0.3, ease: 'power2.out' });
+      gsap.to(nightImg, { opacity: 1, duration: 0.3, ease: 'power2.out' });
       return;
     }
 
@@ -656,9 +656,9 @@
     waitForAllImages(refreshHeroRunway);
   }
 
-  if (document.readyState === 'complete') {
-    init();
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
   } else {
-    window.addEventListener('load', init);
+    init();
   }
 })();
