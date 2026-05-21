@@ -25,20 +25,58 @@
     var pageWrapper = document.querySelector('.page_wrapper');
     var dayDiv = document.querySelector('.day-div');
     var nightDiv = document.querySelector('.night-div');
+    var navLatest = document.querySelector('.nav_latest');
+    var navScrolledTargets = [];
+    if (navLatest) navScrolledTargets.push(navLatest);
+    var dropdownEls = document.querySelectorAll('.nav_latest_dropdown');
+    for (var di = 0; di < dropdownEls.length; di++) navScrolledTargets.push(dropdownEls[di]);
+    var linkBlockEls = document.querySelectorAll('.nav_latest_link_block');
+    for (var li = 0; li < linkBlockEls.length; li++) navScrolledTargets.push(linkBlockEls[li]);
+    var secondaryBtnEls = document.querySelectorAll('.nav_secondary_btn');
+    for (var sbi = 0; sbi < secondaryBtnEls.length; sbi++) navScrolledTargets.push(secondaryBtnEls[sbi]);
+    var primaryBtnEls = document.querySelectorAll('.nav_primary_btn');
+    for (var pbi = 0; pbi < primaryBtnEls.length; pbi++) navScrolledTargets.push(primaryBtnEls[pbi]);
     if (!pageWrapper || !dayDiv || !nightDiv) {
       return;
+    }
+
+    function setNight() {
+      document.body.classList.add('is-night');
+      for (var i = 0; i < navScrolledTargets.length; i++) {
+        navScrolledTargets[i].classList.add('is-scrolled');
+      }
+    }
+    function setDay() {
+      document.body.classList.remove('is-night');
+      for (var i = 0; i < navScrolledTargets.length; i++) {
+        navScrolledTargets[i].classList.remove('is-scrolled');
+      }
+    }
+    function armNavNightAtThreshold() {
+      function check() {
+        var max = document.documentElement.scrollHeight - window.innerHeight;
+        if (max <= 0) return;
+        if (window.pageYOffset >= max * 0.05) {
+          window.removeEventListener('scroll', check);
+          setNight();
+        }
+      }
+      window.addEventListener('scroll', check, { passive: true });
+      check();
     }
 
     var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (reduceMotion) {
       gsap.set(dayDiv, { opacity: 0 });
       gsap.set(nightDiv, { opacity: 1 });
+      setNight();
       return;
     }
 
     if (dayDiv.getBoundingClientRect().bottom <= 0) {
       gsap.to(dayDiv, { opacity: 0, duration: 0.3, ease: 'power2.out' });
       gsap.to(nightDiv, { opacity: 1, duration: 0.3, ease: 'power2.out' });
+      setNight();
       return;
     }
 
@@ -55,8 +93,14 @@
 
     var tl = gsap.timeline({
       paused: true,
-      onComplete: function () { phase = 'free'; },
-      onReverseComplete: function () { phase = 'forward-armed'; }
+      onComplete: function () {
+        phase = 'free';
+        armNavNightAtThreshold();
+      },
+      onReverseComplete: function () {
+        phase = 'forward-armed';
+        setDay();
+      }
     });
     tl.to(dayDiv, { opacity: 0, duration: 0.6, ease: 'power2.inOut' }, 0)
       .to(nightDiv, { opacity: 1, duration: 0.6, ease: 'power2.inOut' }, 0);
