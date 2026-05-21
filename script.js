@@ -45,27 +45,61 @@
     dayImg.style.willChange = 'opacity';
     nightImg.style.willChange = 'opacity';
 
-    var triggered = false;
-
-    function removeListeners() {
-      window.removeEventListener('wheel', onScrollInput);
-      window.removeEventListener('touchmove', onScrollInput);
-      window.removeEventListener('keydown', onKeyDown);
-    }
+    // Phases:
+    //   'forward-armed'    next DOWN scroll plays forward; scroll is locked
+    //   'forward-playing'  forward animation running; scroll is locked
+    //   'free'             animation done; scroll is normal
+    //   'reverse-playing'  reverse animation running; scroll is locked
+    var phase = 'forward-armed';
+    var lastTouchY = null;
 
     var tl = gsap.timeline({
       paused: true,
-      onComplete: removeListeners
+      onComplete: function () { phase = 'free'; },
+      onReverseComplete: function () { phase = 'forward-armed'; }
     });
     tl.to(dayImg, { opacity: 0, duration: 0.6, ease: 'power2.inOut' }, 0)
       .to(nightImg, { opacity: 1, duration: 0.6, ease: 'power2.inOut' }, 0);
 
-    function onScrollInput(e) {
-      if (e && e.cancelable) e.preventDefault();
-      if (!triggered) {
-        triggered = true;
-        tl.play();
+    function getDirection(e) {
+      if (e.type === 'wheel') {
+        if (e.deltaY > 0) return 'down';
+        if (e.deltaY < 0) return 'up';
+        return null;
       }
+      if (e.type === 'touchmove') {
+        if (!e.touches || !e.touches.length) return null;
+        var y = e.touches[0].clientY;
+        var dir = null;
+        if (lastTouchY !== null) {
+          if (y < lastTouchY - 1) dir = 'down';
+          else if (y > lastTouchY + 1) dir = 'up';
+        }
+        lastTouchY = y;
+        return dir;
+      }
+      if (e.type === 'keydown') {
+        var k = e.key;
+        if (k === 'ArrowDown' || k === 'PageDown' || k === ' ' || k === 'End') return 'down';
+        if (k === 'ArrowUp' || k === 'PageUp' || k === 'Home') return 'up';
+      }
+      return null;
+    }
+
+    function onScrollInput(e) {
+      if (phase === 'free') return;
+
+      if (phase === 'forward-armed') {
+        var dir = getDirection(e);
+        if (dir === 'down') {
+          if (e.cancelable) e.preventDefault();
+          phase = 'forward-playing';
+          tl.play();
+        }
+        return;
+      }
+
+      if (e.cancelable) e.preventDefault();
     }
     function onKeyDown(e) {
       var k = e.key;
@@ -75,10 +109,27 @@
         onScrollInput(e);
       }
     }
+    function onTouchStart(e) {
+      if (e.touches && e.touches.length) lastTouchY = e.touches[0].clientY;
+    }
 
     window.addEventListener('wheel', onScrollInput, { passive: false });
+    window.addEventListener('touchstart', onTouchStart, { passive: true });
     window.addEventListener('touchmove', onScrollInput, { passive: false });
     window.addEventListener('keydown', onKeyDown);
+
+    if (typeof window.ScrollTrigger !== 'undefined') {
+      gsap.registerPlugin(ScrollTrigger);
+      ScrollTrigger.create({
+        start: 1,
+        onLeaveBack: function () {
+          if (phase === 'free' && tl.progress() === 1) {
+            phase = 'reverse-playing';
+            tl.reverse();
+          }
+        }
+      });
+    }
   }
 
   function initChannelSwitcher() {
