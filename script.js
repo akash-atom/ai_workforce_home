@@ -15,13 +15,12 @@
   }
 
   function initHeroCrossfade() {
-    if (typeof window.gsap === 'undefined' || typeof window.ScrollTrigger === 'undefined') {
+    if (typeof window.gsap === 'undefined') {
       return;
     }
     if (window.matchMedia && window.matchMedia('(max-width: 991px)').matches) {
       return;
     }
-    gsap.registerPlugin(ScrollTrigger);
 
     var pageWrapper = document.querySelector('.page_wrapper');
     var dayImg = document.querySelector('.ai-workforce-hero-img');
@@ -43,21 +42,43 @@
       return;
     }
 
-    var scrollDistance = window.innerHeight;
-
     dayImg.style.willChange = 'opacity';
     nightImg.style.willChange = 'opacity';
 
-    var tl = gsap.timeline({ paused: true });
+    var triggered = false;
+
+    function removeListeners() {
+      window.removeEventListener('wheel', onScrollInput);
+      window.removeEventListener('touchmove', onScrollInput);
+      window.removeEventListener('keydown', onKeyDown);
+    }
+
+    var tl = gsap.timeline({
+      paused: true,
+      onComplete: removeListeners
+    });
     tl.to(dayImg, { opacity: 0, duration: 0.6, ease: 'power2.inOut' }, 0)
       .to(nightImg, { opacity: 1, duration: 0.6, ease: 'power2.inOut' }, 0);
 
-    ScrollTrigger.create({
-      start: 1,
-      end: scrollDistance,
-      onEnter: function () { tl.play(); },
-      onLeaveBack: function () { tl.reverse(); }
-    });
+    function onScrollInput(e) {
+      if (e && e.cancelable) e.preventDefault();
+      if (!triggered) {
+        triggered = true;
+        tl.play();
+      }
+    }
+    function onKeyDown(e) {
+      var k = e.key;
+      if (k === 'ArrowDown' || k === 'ArrowUp' ||
+          k === 'PageDown' || k === 'PageUp' ||
+          k === ' ' || k === 'Home' || k === 'End') {
+        onScrollInput(e);
+      }
+    }
+
+    window.addEventListener('wheel', onScrollInput, { passive: false });
+    window.addEventListener('touchmove', onScrollInput, { passive: false });
+    window.addEventListener('keydown', onKeyDown);
   }
 
   function initChannelSwitcher() {
