@@ -5,6 +5,420 @@
     }
   }
 
+  function startPageLoader() {
+    if (!document.body) {
+      requestAnimationFrame(startPageLoader);
+      return;
+    }
+    if (document.getElementById('page-loader')) return;
+
+    var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    var COLOR = '#162731';
+    var ACCENT = '#4EC899';
+    var INITIAL_W = 560;
+    var INITIAL_H = 184;
+    var INITIAL_RADIUS = 14;
+    var TYPED_PREFIX = '$ ';
+    var TYPED_TEXT = 'add ai coworkers';
+    var FADE_LINES = [
+      { text: 'initiating soul.md', opacity: 0.55 },
+      { text: 'installed soul.md in 0.9 s', opacity: 0.55 },
+      { text: 'workforce ready 🚀', color: ACCENT }
+    ];
+
+    var style = document.createElement('style');
+    style.textContent = [
+      '#page-loader {',
+      '  position: fixed;',
+      '  top: 50%;',
+      '  left: 50%;',
+      '  width: 0px;',
+      '  height: 0px;',
+      '  border-radius: ' + INITIAL_RADIUS + 'px;',
+      '  background-color: ' + COLOR + ';',
+      '  box-shadow: 0 0 0 100vmax ' + COLOR + ';',
+      '  transform: translate(-50%, -50%);',
+      '  z-index: 99999;',
+      '  pointer-events: none;',
+      '  overflow: hidden;',
+      '  will-change: width, height, border-radius, background-color;',
+      '}',
+      '#page-loader .pl-terminal {',
+      '  position: absolute;',
+      '  top: 50%;',
+      '  left: 50%;',
+      '  transform: translate(-50%, -50%);',
+      '  display: flex;',
+      '  flex-direction: column;',
+      '  gap: 6px;',
+      '  opacity: 0;',
+      '  font-family: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;',
+      '  font-size: 16px;',
+      '  line-height: 24px;',
+      '  font-weight: 400;',
+      '  color: #e6e9ee;',
+      '  white-space: pre;',
+      '  letter-spacing: 0;',
+      '}',
+      '#page-loader .pl-line {',
+      '  opacity: 0;',
+      '  transform: translateY(14px);',
+      '  will-change: transform, opacity;',
+      '}',
+      '#page-loader .pl-cursor {',
+      '  display: inline-block;',
+      '  width: 0.55em;',
+      '  height: 1.05em;',
+      '  background: currentColor;',
+      '  vertical-align: -0.18em;',
+      '  margin-left: 0.05em;',
+      '  animation: pl-blink 0.95s steps(1, end) infinite;',
+      '}',
+      '@keyframes pl-blink {',
+      '  0%, 50% { opacity: 1; }',
+      '  50.01%, 100% { opacity: 0; }',
+      '}'
+    ].join('\n');
+    document.head.appendChild(style);
+
+    var overlay = document.createElement('div');
+    overlay.id = 'page-loader';
+    overlay.setAttribute('aria-hidden', 'true');
+
+    var terminal = document.createElement('div');
+    terminal.className = 'pl-terminal';
+
+    // Line 1: typed line with prefix + dynamic typed span + blinking cursor
+    var line1 = document.createElement('div');
+    line1.className = 'pl-line';
+    var prefixEl = document.createElement('span');
+    prefixEl.textContent = TYPED_PREFIX;
+    var typedEl = document.createElement('span');
+    var cursorEl = document.createElement('span');
+    cursorEl.className = 'pl-cursor';
+    line1.appendChild(prefixEl);
+    line1.appendChild(typedEl);
+    line1.appendChild(cursorEl);
+    terminal.appendChild(line1);
+
+    // Remaining lines: plain fade-in
+    var fadeLineEls = [];
+    for (var fi = 0; fi < FADE_LINES.length; fi++) {
+      var el = document.createElement('div');
+      el.className = 'pl-line';
+      el.textContent = FADE_LINES[fi].text;
+      if (FADE_LINES[fi].color) el.style.color = FADE_LINES[fi].color;
+      terminal.appendChild(el);
+      fadeLineEls.push(el);
+    }
+
+    overlay.appendChild(terminal);
+    document.body.appendChild(overlay);
+
+    var prevOverflow = document.documentElement.style.overflow;
+    document.documentElement.style.overflow = 'hidden';
+
+    function removeOverlay() {
+      if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+      document.documentElement.style.overflow = prevOverflow;
+    }
+
+    var heroTargets = null;
+
+    function setupHeroReveal() {
+      if (heroTargets) return;
+      var configs = [
+        { sel: '.hero-section-tag', mask: true },
+        { sel: '.heading-h1-v2', mask: true },
+        { sel: '.website-body-txt', mask: true },
+        { sel: '.primary-cta-v2', mask: false }
+      ];
+      var targets = [];
+      for (var i = 0; i < configs.length; i++) {
+        var cfg = configs[i];
+        var el = document.querySelector(cfg.sel);
+        if (!el) continue;
+        if (cfg.mask) {
+          var inner = document.createElement('span');
+          inner.className = 'pl-reveal-inner';
+          inner.style.display = 'block';
+          inner.style.willChange = 'transform, opacity';
+          inner.style.opacity = '0';
+          while (el.firstChild) inner.appendChild(el.firstChild);
+          el.appendChild(inner);
+          var origOverflow = el.style.overflow;
+          el.style.overflow = 'hidden';
+          targets.push({ el: inner, mask: true, parent: el, origOverflow: origOverflow });
+        } else {
+          el.style.willChange = 'transform, opacity';
+          el.style.opacity = '0';
+          targets.push({ el: el, mask: false });
+        }
+      }
+      heroTargets = targets;
+    }
+
+    function playHeroReveal(tl, startTime) {
+      if (!heroTargets || !heroTargets.length) return;
+      for (var i = 0; i < heroTargets.length; i++) {
+        (function (t, idx) {
+          var cleanup = function () {
+            t.el.style.willChange = '';
+            t.el.style.transform = '';
+            t.el.style.opacity = '';
+            if (t.mask && t.parent) {
+              t.parent.style.overflow = t.origOverflow || '';
+            }
+          };
+          if (t.mask) {
+            tl.fromTo(t.el,
+              { yPercent: 110, opacity: 0, force3D: true },
+              { yPercent: 0, opacity: 1, duration: 0.88, ease: 'power3.out', onComplete: cleanup },
+              startTime + idx * 0.12
+            );
+          } else {
+            tl.fromTo(t.el,
+              { y: 22, opacity: 0, force3D: true },
+              { y: 0, opacity: 1, duration: 0.7, ease: 'power3.out', onComplete: cleanup },
+              startTime + idx * 0.12
+            );
+          }
+        })(heroTargets[i], i);
+      }
+    }
+
+    function instantRevealHero() {
+      if (!heroTargets) return;
+      for (var i = 0; i < heroTargets.length; i++) {
+        var t = heroTargets[i];
+        t.el.style.transform = '';
+        t.el.style.opacity = '';
+        t.el.style.willChange = '';
+        if (t.mask && t.parent) {
+          t.parent.style.overflow = t.origOverflow || '';
+        }
+      }
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', setupHeroReveal);
+    } else {
+      setupHeroReveal();
+    }
+
+    function openRectangle(cb) {
+      if (reduceMotion || typeof window.gsap === 'undefined') {
+        overlay.style.width = INITIAL_W + 'px';
+        overlay.style.height = INITIAL_H + 'px';
+        openedAt = Date.now();
+        revealTerminal();
+        if (cb) cb();
+        return;
+      }
+      gsap.to(overlay, {
+        width: INITIAL_W,
+        height: INITIAL_H,
+        duration: 0.62,
+        ease: 'power3.out',
+        onComplete: function () {
+          openedAt = Date.now();
+          revealTerminal();
+          if (cb) cb();
+        }
+      });
+    }
+
+    function revealTerminal() {
+      if (reduceMotion || typeof window.gsap === 'undefined') {
+        terminal.style.opacity = '1';
+        typedEl.textContent = TYPED_TEXT;
+        cursorEl.style.opacity = '0';
+        line1.style.opacity = '1';
+        line1.style.transform = 'translate3d(0, 0, 0)';
+        for (var i = 0; i < fadeLineEls.length; i++) {
+          fadeLineEls[i].style.opacity = '1';
+          fadeLineEls[i].style.transform = 'translate3d(0, 0, 0)';
+        }
+        terminalDone = true;
+        tryHide();
+        return;
+      }
+
+      var tl = gsap.timeline({
+        onComplete: function () {
+          terminalDone = true;
+          tryHide();
+        }
+      });
+
+      // 1. Terminal container fades in.
+      tl.to(terminal, {
+        opacity: 1,
+        duration: 0.24,
+        ease: 'power2.out'
+      }, 0);
+
+      // 2. Line 1 slides up + fades in (prefix and cursor visible).
+      tl.fromTo(line1,
+        { y: 14, opacity: 0 },
+        { y: 0, opacity: 1, duration: 0.4, ease: 'power3.out' },
+        0.12
+      );
+
+      // 3. Pause, then type the command character by character.
+      var typedObj = { i: 0 };
+      tl.to(typedObj, {
+        i: TYPED_TEXT.length,
+        duration: TYPED_TEXT.length * 0.038,
+        ease: 'none',
+        onUpdate: function () {
+          typedEl.textContent = TYPED_TEXT.substring(0, Math.floor(typedObj.i));
+        },
+        onComplete: function () {
+          typedEl.textContent = TYPED_TEXT;
+        }
+      }, '+=0.18');
+
+      // 4. Cursor disappears as soon as the sentence finishes typing.
+      tl.to(cursorEl, {
+        opacity: 0,
+        duration: 0.12,
+        ease: 'power2.in'
+      }, '+=0');
+
+      // 5. Stagger fade-in for the remaining lines. System messages
+      //    land at lower opacity to differentiate from the typed line.
+      for (var i = 0; i < fadeLineEls.length; i++) {
+        var finalOpacity = typeof FADE_LINES[i].opacity === 'number' ? FADE_LINES[i].opacity : 1;
+        tl.fromTo(fadeLineEls[i],
+          { y: 14, opacity: 0 },
+          { y: 0, opacity: finalOpacity, duration: 0.4, ease: 'power3.out' },
+          i === 0 ? '+=0.05' : '<+0.26'
+        );
+      }
+
+      // 6. Hold so the final orange line lands and registers.
+      tl.to({}, { duration: 0.55 });
+    }
+
+    var t0 = Date.now();
+    var openedAt = 0;
+    var MIN_HOLD = reduceMotion ? 0 : 0;
+    var MAX_VISIBLE = 5000;
+    var hidden = false;
+    var opened = false;
+    var terminalDone = false;
+    var pending = 0;
+
+    function tryHide() {
+      if (hidden) return;
+      if (!opened) return;
+      if (!terminalDone) return;
+      if (pending > 0) return;
+      var elapsed = openedAt ? Date.now() - openedAt : 0;
+      if (elapsed < MIN_HOLD) {
+        setTimeout(tryHide, MIN_HOLD - elapsed);
+        return;
+      }
+      hide();
+    }
+
+    function hide() {
+      if (hidden) return;
+      hidden = true;
+
+      if (reduceMotion || typeof window.gsap === 'undefined') {
+        instantRevealHero();
+        removeOverlay();
+        return;
+      }
+
+      var tl = gsap.timeline({ onComplete: removeOverlay });
+
+      // 1. Loader (rectangle + surrounding box-shadow + terminal) fades out.
+      tl.to(overlay, {
+        opacity: 0,
+        duration: 0.7,
+        ease: 'power2.inOut'
+      }, 0);
+
+      // 2. Hero text mask-reveals concurrently with the fade. Stagger
+      //    tag -> heading -> subtext -> CTA for natural reading order.
+      playHeroReveal(tl, 0.12);
+    }
+
+    function signal() {
+      pending--;
+      tryHide();
+    }
+    function waitFor(fn) {
+      pending++;
+      fn(signal);
+    }
+
+    waitFor(function (done) {
+      if (window.gsap) { done(); return; }
+      var start = Date.now();
+      var iv = setInterval(function () {
+        if (window.gsap || Date.now() - start > 1800) {
+          clearInterval(iv);
+          done();
+        }
+      }, 30);
+    });
+
+    waitFor(function (done) {
+      function collect(el, out) {
+        if (!el) return;
+        var found = el.querySelectorAll('img');
+        for (var i = 0; i < found.length; i++) out.push(found[i]);
+      }
+      function whenReady() {
+        var imgs = [];
+        collect(document.querySelector('.day-div'), imgs);
+        collect(document.querySelector('.night-div'), imgs);
+        if (!imgs.length) { done(); return; }
+        var n = imgs.length;
+        function one() { n--; if (n === 0) done(); }
+        for (var i = 0; i < imgs.length; i++) {
+          if (imgs[i].complete && imgs[i].naturalWidth > 0) one();
+          else {
+            imgs[i].addEventListener('load', one);
+            imgs[i].addEventListener('error', one);
+          }
+        }
+      }
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', whenReady);
+      } else {
+        whenReady();
+      }
+    });
+
+    if (document.fonts && document.fonts.ready && document.fonts.ready.then) {
+      waitFor(function (done) {
+        document.fonts.ready.then(done, done);
+      });
+    }
+
+    // Once GSAP is around (or after a brief wait), open the small rectangle.
+    // The hold/grow then waits on all signals as usual.
+    function tryOpen() {
+      if (opened) return;
+      if (typeof window.gsap === 'undefined' && Date.now() - t0 < 1200) {
+        setTimeout(tryOpen, 40);
+        return;
+      }
+      opened = true;
+      openRectangle(tryHide);
+    }
+    requestAnimationFrame(tryOpen);
+
+    setTimeout(function () { if (!hidden) hide(); }, MAX_VISIBLE);
+  }
+  startPageLoader();
+
   function findByChannel(list, channel) {
     for (var i = 0; i < list.length; i++) {
       if (list[i].getAttribute('data-channel') === channel) {
@@ -936,6 +1350,104 @@
     each(cards, setupCard);
   }
 
+  function initCustomerStatsCount() {
+    var stats = document.querySelectorAll('.customer-stat');
+    if (!stats.length) return;
+    if (!('IntersectionObserver' in window)) return;
+
+    var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    function parseStat(text) {
+      var trimmed = (text || '').replace(/\s+/g, ' ').trim();
+      var match = trimmed.match(/(-?\d+(?:\.\d+)?)/);
+      if (!match) return null;
+      var numStr = match[1];
+      var idx = trimmed.indexOf(numStr);
+      return {
+        prefix: trimmed.substring(0, idx),
+        suffix: trimmed.substring(idx + numStr.length),
+        target: parseFloat(numStr),
+        decimals: (numStr.split('.')[1] || '').length
+      };
+    }
+
+    function format(d, value) {
+      return d.prefix + value.toFixed(d.decimals) + d.suffix;
+    }
+
+    var entries = [];
+    for (var i = 0; i < stats.length; i++) {
+      var d = parseStat(stats[i].textContent);
+      if (!d) continue;
+      entries.push({ el: stats[i], data: d, animated: false });
+      // Reserve layout space by hinting tabular numerals so the width does
+      // not jitter as digits change, then set initial display to 0.
+      stats[i].style.fontVariantNumeric = 'tabular-nums';
+      stats[i].textContent = format(d, 0);
+    }
+    if (!entries.length) return;
+
+    if (reduceMotion) {
+      for (var j = 0; j < entries.length; j++) {
+        entries[j].el.textContent = format(entries[j].data, entries[j].data.target);
+      }
+      return;
+    }
+
+    function animate(entry) {
+      if (entry.animated) return;
+      entry.animated = true;
+      var d = entry.data;
+      var el = entry.el;
+      if (typeof window.gsap !== 'undefined') {
+        var obj = { v: 0 };
+        gsap.to(obj, {
+          v: d.target,
+          duration: 1.6,
+          ease: 'power2.out',
+          onUpdate: function () {
+            el.textContent = format(d, obj.v);
+          },
+          onComplete: function () {
+            el.textContent = format(d, d.target);
+          }
+        });
+      } else {
+        // RAF fallback if GSAP isn't loaded
+        var start = null;
+        var dur = 1600;
+        function step(ts) {
+          if (start === null) start = ts;
+          var p = Math.min(1, (ts - start) / dur);
+          // ease-out cubic
+          var eased = 1 - Math.pow(1 - p, 3);
+          el.textContent = format(d, d.target * eased);
+          if (p < 1) requestAnimationFrame(step);
+          else el.textContent = format(d, d.target);
+        }
+        requestAnimationFrame(step);
+      }
+    }
+
+    var observer = new IntersectionObserver(function (ioEntries) {
+      for (var k = 0; k < ioEntries.length; k++) {
+        var io = ioEntries[k];
+        if (!io.isIntersecting) continue;
+        for (var m = 0; m < entries.length; m++) {
+          if (entries[m].el === io.target && !entries[m].animated) {
+            animate(entries[m]);
+            observer.unobserve(io.target);
+            break;
+          }
+        }
+      }
+    }, { threshold: 0.5 });
+
+    for (var n = 0; n < entries.length; n++) {
+      observer.observe(entries[n].el);
+    }
+  }
+
   function init() {
     eagerLoadAllImages();
     initHeroCrossfade();
@@ -946,6 +1458,7 @@
     initStickyLinkState();
     initCustomerLogosMarquee();
     initConnectItsmBinary();
+    initCustomerStatsCount();
     waitForAllImages(refreshHeroRunway);
   }
 
