@@ -22,8 +22,8 @@
     var TYPED_PREFIX = '$ ';
     var TYPED_TEXT = 'add ai coworkers';
     var FADE_LINES = [
-      { text: 'initiating soul.md', opacity: 0.55 },
-      { text: 'installed soul.md in 0.9 s', opacity: 0.55 },
+      { text: 'initiating identity.md', opacity: 0.55 },
+      { text: 'installed work.md in 0.9s', opacity: 0.55 },
       { text: 'workforce ready 🚀', color: ACCENT }
     ];
 
