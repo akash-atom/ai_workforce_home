@@ -1,6 +1,6 @@
 {
   "name": "@aw-webflow/ai_workforce_home",
-  "version": "1.0.18",
+  "version": "1.0.19",
   "description": "",
   "scripts": {
     "start": "parcel script.js",

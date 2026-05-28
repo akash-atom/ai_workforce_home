@@ -23,7 +23,7 @@
     var TYPED_TEXT = 'add ai coworkers';
     var FADE_LINES = [
       { text: 'initiating identity.md', opacity: 0.55 },
-      { text: 'installed work.md in 0.9s', opacity: 0.55 },
+      { text: 'installed identity.md in 0.9s', opacity: 0.55 },
       { text: 'workforce ready 🚀', color: ACCENT }
     ];
 
