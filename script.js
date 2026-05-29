@@ -17,14 +17,15 @@
     var COLOR = '#162731';
     var ACCENT = '#4EC899';
     var INITIAL_W = 560;
-    var INITIAL_H = 184;
+    var INITIAL_H = 214;
     var INITIAL_RADIUS = 14;
     var TYPED_PREFIX = '$ ';
-    var TYPED_TEXT = 'add ai coworkers';
+    var TYPED_TEXT = 'deploy ai coworkers';
     var FADE_LINES = [
       { text: 'initiating identity.md', opacity: 0.55 },
-      { text: 'installed identity.md in 0.9s', opacity: 0.55 },
-      { text: 'workforce ready 🚀', color: ACCENT }
+      { text: 'adding skills.md', opacity: 0.55 },
+      { text: 'installing runtime.md', opacity: 0.55 },
+      { text: 'ai workforce ready🚀', color: ACCENT }
     ];
 
     var style = document.createElement('style');
