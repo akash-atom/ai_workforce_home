@@ -24,7 +24,7 @@
     var FADE_LINES = [
       { text: 'initiating identity.md', opacity: 0.55 },
       { text: 'installing runtime.md', opacity: 0.55 },
-      { text: 'ai workforce ready🚀', color: ACCENT }
+      { text: 'ai workforce ready', color: ACCENT }
     ];
 
     var style = document.createElement('style');
