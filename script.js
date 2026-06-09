@@ -39,7 +39,7 @@
       '  background-color: ' + COLOR + ';',
       '  box-shadow: 0 0 0 100vmax ' + COLOR + ';',
       '  transform: translate(-50%, -50%);',
-      '  z-index: 99999;',
+      '  z-index: 1000001;',
       '  pointer-events: none;',
       '  overflow: hidden;',
       '  will-change: width, height, border-radius, background-color;',
