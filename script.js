@@ -1115,47 +1115,81 @@
     var cs = getComputedStyle(wrapper);
     var gap = parseInt(cs.columnGap || cs.gap, 10) || 24;
 
-    var track = document.createElement('div');
-    track.style.display = 'flex';
-    track.style.alignItems = 'center';
-    track.style.gap = gap + 'px';
-    track.style.flexShrink = '0';
+    var base = document.createElement('div');
+    base.style.display = 'flex';
+    base.style.alignItems = 'center';
+    base.style.gap = gap + 'px';
+    base.style.flexShrink = '0';
 
     while (wrapper.firstChild) {
-      track.appendChild(wrapper.firstChild);
+      base.appendChild(wrapper.firstChild);
     }
-
-    var trackClone = track.cloneNode(true);
-    trackClone.setAttribute('aria-hidden', 'true');
 
     wrapper.style.overflow = 'hidden';
     wrapper.style.display = 'flex';
     wrapper.style.gap = gap + 'px';
     wrapper.style.justifyContent = 'flex-start';
-    wrapper.appendChild(track);
-    wrapper.appendChild(trackClone);
+    wrapper.appendChild(base);
+
+    // Constant scroll speed (px/sec) so the marquee feels the same no matter
+    // how many logos are present.
+    var SPEED = 40;
 
     var marqueeAnimation = null;
 
     function play() {
-      var width = parseInt(getComputedStyle(track).getPropertyValue('width'), 10);
-      var distance = -1 * (width + gap);
-
       if (marqueeAnimation) marqueeAnimation.kill();
 
+      // Start from a single base track, then clone enough copies to cover the
+      // viewport plus one full copy so no blank gap shows as the row scrolls.
+      while (wrapper.children.length > 1) {
+        wrapper.removeChild(wrapper.lastChild);
+      }
+
+      var baseWidth = base.getBoundingClientRect().width;
+      if (!baseWidth) return;
+      var unit = baseWidth + gap; // one full copy + its trailing gap
+      var viewport = wrapper.getBoundingClientRect().width;
+
+      var copies = Math.ceil(viewport / unit) + 2;
+      for (var i = 1; i < copies; i++) {
+        var clone = base.cloneNode(true);
+        clone.setAttribute('aria-hidden', 'true');
+        wrapper.appendChild(clone);
+      }
+
+      // Shifting every copy left by exactly one unit lands the next copy on the
+      // previous one's spot — seamless because the content is identical.
       marqueeAnimation = gsap.fromTo(
         wrapper.children,
         { x: 0 },
         {
-          x: distance,
-          duration: 45,
+          x: -unit,
+          duration: unit / SPEED,
           repeat: -1,
-          ease: 'linear'
+          ease: 'none'
         }
       );
     }
 
     play();
+
+    // SVG logos can report zero/incorrect width until they decode; recompute
+    // once each finishes loading so the distance and speed stay accurate.
+    var logoImgs = base.querySelectorAll('img');
+    for (var li = 0; li < logoImgs.length; li++) {
+      var img = logoImgs[li];
+      if (img.complete && img.naturalWidth > 0) continue;
+      (function (image) {
+        function ready() {
+          image.removeEventListener('load', ready);
+          image.removeEventListener('error', ready);
+          play();
+        }
+        image.addEventListener('load', ready);
+        image.addEventListener('error', ready);
+      })(img);
+    }
 
     wrapper.addEventListener('mouseenter', function () {
       if (marqueeAnimation) marqueeAnimation.pause();
