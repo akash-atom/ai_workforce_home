@@ -20,10 +20,9 @@
     var INITIAL_H = 184;
     var INITIAL_RADIUS = 14;
     var TYPED_PREFIX = '$ ';
-    var TYPED_TEXT = 'deploy ai coworkers';
+    var TYPED_TEXT = 'deploy atomicwork ai coworkers';
     var FADE_LINES = [
       { text: 'initiating identity.md', opacity: 0.55 },
-      { text: 'installing runtime.md', opacity: 0.55 },
       { text: 'ai workforce ready', color: ACCENT }
     ];
 
